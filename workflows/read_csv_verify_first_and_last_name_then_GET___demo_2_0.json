@@ -14,7 +14,7 @@
     },
     {
       "parameters": {
-        "fileSelector": "/source/exchange/n8n-demo-file-to-api/data/substrings.csv"
+        "fileSelector": "/data/substrings.csv"
       },
       "id": "4d60c271-627c-4aab-a675-defc3b5b0dac",
       "name": "Read Binary Files",

@@ -14,7 +14,7 @@
     },
     {
       "parameters": {
-        "fileSelector": "/source/exchange/n8n-demo-file-to-api/data/json-validate-missing-properties.csv"
+        "fileSelector": "/data/json-validate-missing-properties.csv"
       },
       "id": "8b4aaab3-0446-4614-8383-af347c867ffe",
       "name": "Read Binary Files",

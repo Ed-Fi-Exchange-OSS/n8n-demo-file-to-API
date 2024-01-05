@@ -14,7 +14,7 @@
     },
     {
       "parameters": {
-        "fileSelector": "/source/exchange/n8n-demo-file-to-api/data/regex-test.csv"
+        "fileSelector": "/data/regex-test.csv"
       },
       "id": "af2bf645-ff04-4741-9339-3ab2f541576f",
       "name": "Read Binary Files",
