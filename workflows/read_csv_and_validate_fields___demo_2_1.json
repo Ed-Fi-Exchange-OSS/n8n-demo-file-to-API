@@ -1,0 +1,106 @@
+{
+  "name": "read csv and validate fields - demo 2.1",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "64ec46df-8cb9-4eb0-8d4c-59c461f099d6",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "fileSelector": "/source/exchange/n8n-demo-file-to-api/data/regex-test.csv"
+      },
+      "id": "af2bf645-ff04-4741-9339-3ab2f541576f",
+      "name": "Read Binary Files",
+      "type": "n8n-nodes-base.readBinaryFiles",
+      "typeVersion": 1,
+      "position": [
+        160,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "fileFormat": "csv",
+        "options": {
+          "headerRow": true
+        }
+      },
+      "id": "303dae39-fb0c-4c32-b1c2-c08278588e37",
+      "name": "Spreadsheet File",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        380,
+        380
+      ],
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "'''\nYEAR,DISTRICT_NO,DISTRICT_NAME,SCHOOL_ID,SCHOOL_NAME,STUDENT_ID,GRADE_LEVEL,OVERALL_SCORE,READING_SCORE,WRITING_SCORE,ASSESS_UNIQUE_ID\n\n-> use case: year missing, year and district_no both in district_no\n,2019255901,\"Grand Bend ISD\",255901107,\"Grand Bend Elementary School\",604825,\"04\",283,290,246,1020197964883\n\n-> use case: district_no missing, year and district_no both in year\n2019255901,,\"Grand Bend ISD\",255901107,\"Grand Bend Elementary School\",604826,\"04\",174,198,116,1020197964884\n\n-> use case: year with extra no numeric characters\n201x9,255901,\"Grand Bend ISD\",255901107,\"Grand Bend Elementary School\",604864,\"04\",263,251,263,1020197964886\n\n-> use case: district_no with extra no numeric characters \n2019,25fB5901,\"Grand Bend ISD\",255901107,\"Grand Bend Elementary School\",604870,\"04\",258,269,277,1020197964887\n\n-> use case: district_name missing\n2019,255901,,255901107,\"Grand Bend Elementary School\",604888,\"04\",268,296,251,1020197964888\n\n-> use case: district_no with extra numeric characters\n2019,25225901,\"Grand Bend ISD\",255901107,\"Grand Bend Elementary School\",604876,\"04\",288,299,281,1020197964892\n'''\nimport re\n\nkeys             = [\n  \"YEAR\",\n  \"DISTRICT_NO\",\n  \"DISTRICT_NAME\",\n  \"SCHOOL_ID\",\n  \"SCHOOL_NAME\",\n  \"STUDENT_ID\",\n  \"GRADE_LEVEL\",\n  \"OVERALL_SCORE\",\n  \"READING_SCORE\",\n  \"WRITING_SCORE\",\n  \"ASSESS_UNIQUE_ID\"\n]\nlen_year         = 4\nlen_district_no  = 6\n\ndef split_field(item, case_no):\n  to_be_splitted = \"\"\n  \n  if case_no == 1:\n    to_be_splitted        = item.json.DISTRICT_NO\n    item.json.YEAR        = (to_be_splitted)[0:4]\n    item.json.DISTRICT_NO = (to_be_splitted)[4:]\n\n  if case_no == 2:\n    to_be_splitted        = item.json.YEAR\n    item.json.YEAR        = (to_be_splitted)[0:4]\n    item.json.DISTRICT_NO = (to_be_splitted)[4:]\n\ndef clean_field(item, case_no):\n  to_be_cleaned  = \"\"\n\n  if case_no == 3:\n    to_be_cleaned         = item.json.YEAR \n    numbers               = re.findall(\"[^aA-zZ]+\", to_be_cleaned)\n    cleaned               = \"\"\n\n    for number in numbers:\n      cleaned            += number\n      \n    if len(cleaned) == len_year:\n      item.json.YEAR      = cleaned\n    else:\n      # year value is unexpected, setting to 9999\n      item.json.YEAR      = '9999'      \n  elif case_no == 4:\n    to_be_cleaned         = item.json.DISTRICT_NO \n    numbers               = re.findall(\"[^aA-zZ]+\", to_be_cleaned)\n    cleaned               = \"\"\n    \n    for number in numbers:\n      cleaned            += number\n\n    if len(cleaned) == len_district_no:\n      item.json.DISTRICT_NO = cleaned\n    else:\n      # district no value is unexpected, setting to 999999\n      item.json.DISTRICT_NO = '999999'      \n  #else:\n    #print(\"\")\n\nfor item in _input.all():\n  inner_aupper_case_index = 0\n  \n  for key in keys:\n    case_no               = 0\n    temp                  = _jmespath(item.json, key)\n\n    if temp is None:\n      if key == \"YEAR\":\n        district_no       = _jmespath(item.json, \"DISTRICT_NO\")\n        if ( \n          district_no is not None and \n          len(district_no) == len_district_no + len_year\n        ):\n          # year and district_no together in district_no field\n          case_no         = 1\n          split_field(item, case_no)\n        \n      if key == \"DISTRICT_NO\":\n        year              = _jmespath(item.json, \"YEAR\")\n        if ( \n          year is not None and \n          len(year) == len_district_no + len_year\n        ):\n          # year and district_no together in year field\n          case_no         = 2\n          split_field(item, case_no\n                     )\n      if key == \"DISTRICT_NAME\":\n        item.json.DISTRICT_NAME = _jmespath(last.json, \"DISTRICT_NAME\")\n    else:\n      year                = _jmespath(item.json, \"YEAR\")\n      if (\n        key == \"YEAR\" and \n        len(item.json.YEAR) > len_year\n      ):\n        if (\n          year is not None and \n          len(year) == len_district_no + len_year\n        ):\n          # year and district_no together in year field\n          case_no          = 2\n          split_field(item, case_no)\n        else:\n          # year found, but has more than 4 digits/characters \n          case_no          = 3\n\n        clean_field(item, case_no)\n\n      if len(year) == len_year and not year.isnumeric():\n        item.json.YEAR     = '9999'\n        \n      if (\n        key == \"DISTRICT_NO\" and \n        len(item.json.DISTRICT_NO) > len_district_no\n      ):\n        # district_no found, but has more than 6 characters\n        case_no            = 4\n\n        clean_field(item, case_no)\n  # keep a reference to the n-1 item for values      \n  last                     = item\n  \nreturn _input.all()"
+      },
+      "id": "6fb954d7-9a1a-47e3-8c4b-6d4ea34202d3",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        580,
+        380
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Read Binary Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Binary Files": {
+      "main": [
+        [
+          {
+            "node": "Spreadsheet File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spreadsheet File": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "45617558-7436-4735-82c9-3d6157cd4d5f",
+  "id": "RDWGV8h52UBflSUz",
+  "meta": {
+    "instanceId": "953946e762fb26f42b275af88becf68b0fcdf124296d8d4f20a0e4905e149439"
+  },
+  "tags": []
+}

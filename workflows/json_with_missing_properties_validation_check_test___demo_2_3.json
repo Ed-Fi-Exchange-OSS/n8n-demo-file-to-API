@@ -1,0 +1,103 @@
+{
+  "name": "json with missing properties validation check test - demo 2.3",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "857c9ef2-9fbd-4253-ab0b-3583051e48d6",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        60,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "fileSelector": "/source/exchange/n8n-demo-file-to-api/data/json-validate-missing-properties.csv"
+      },
+      "id": "5d13d756-dc5a-4b4e-816e-b2ca0943f85a",
+      "name": "Read Binary Files",
+      "type": "n8n-nodes-base.readBinaryFiles",
+      "typeVersion": 1,
+      "position": [
+        280,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "fileFormat": "csv",
+        "options": {}
+      },
+      "id": "620444f2-bf68-4046-a80f-0882247fa200",
+      "name": "Spreadsheet File",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        500,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "'''\n-> use case: property lastSurname missing\nlastSurname\nJimenez\nColeman\nDiana\nZimmerman\n'''\nimport json\nimport jsonschema\nfrom jsonschema import validate\n\nstudentSchema = {\n  \"type\": \"object\",\n  \"required\": [\n    \"firstName\", \n    \"lastSurname\"\n  ],  \n  \"properties\": {\n    \"firstName\": {\"type\": \"string\"},\n    \"lastSurname\": {\"type\": \"string\"}\n  }\n}\n\ndef validateJson(jsonData):\n  result   = True\n  msg      = \"Schema accepted\"\n  try:\n    validate(instance=jsonData, schema=studentSchema)\n  except jsonschema.exceptions.ValidationError as err:\n    msg    = err.message\n    result = False\n  return result, msg\n\ni0         = (_input.first().to_py())['json']\ni1         = json.dumps(i0)\ni2         = json.loads(i1)\n\nisValid, msg = validateJson(i2)\n  \nif not isValid:\n  #print((item.pairedItem).to_py()[\"item\"])\n  print(\"{0}\".format(msg))\n  print(i0)\n  \nreturn _input.all()"
+      },
+      "id": "cea435a9-7adb-4882-9e50-7fc1c297593a",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        160
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Read Binary Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Binary Files": {
+      "main": [
+        [
+          {
+            "node": "Spreadsheet File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spreadsheet File": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c8d02e50-7022-497e-8a21-71bf34c6b8c8",
+  "id": "supBZuQGAfPwca3u",
+  "meta": {
+    "instanceId": "953946e762fb26f42b275af88becf68b0fcdf124296d8d4f20a0e4905e149439"
+  },
+  "tags": []
+}
