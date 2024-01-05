@@ -1,10 +1,10 @@
-# {Insert Repository Name Here}
+# n8n-demo-file-to-API
 
-{Insert project information here}
+Demonstrates use of [n8n](https://n8n.io/) to load CSV files into the Ed-Fi API
 
 ## Legal Information
 
-Copyright (c) 2021 Ed-Fi Alliance, LLC and contributors.
+Copyright (c) 2024 Ed-Fi Alliance, LLC and contributors.
 
 Licensed under the [Apache License, Version 2.0](LICENSE) (the "License").
 
