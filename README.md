@@ -1,6 +1,11 @@
 # n8n-demo-file-to-API
 
-Demonstrates use of [n8n](https://n8n.io/) to load CSV files into the Ed-Fi API
+Demonstrates use of [n8n](https://n8n.io/) to load CSV files into the Ed-Fi API.
+
+* [Evaluation of n8n for Loading CSV Files into the Ed-Fi API](docs/README.md)
+* [data files](data/)
+* [workflow files](workflows/)
+
 
 ## Legal Information
 
