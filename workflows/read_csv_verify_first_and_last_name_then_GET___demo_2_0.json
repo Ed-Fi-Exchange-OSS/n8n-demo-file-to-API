@@ -1,0 +1,433 @@
+{
+  "name": "read csv verify first and last name then GET - demo 2.0",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "d0381f04-04ec-4fc5-a58d-d7a135165162",
+      "name": "When clicking \"Execute Workflow\"",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -360,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "fileSelector": "/data/substrings.csv"
+      },
+      "id": "4d60c271-627c-4aab-a675-defc3b5b0dac",
+      "name": "Read Binary Files",
+      "type": "n8n-nodes-base.readBinaryFiles",
+      "typeVersion": 1,
+      "position": [
+        -180,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "fileFormat": "csv",
+        "options": {}
+      },
+      "id": "e438a988-f123-4405-9727-d9cc1e893842",
+      "name": "Spreadsheet File",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        0,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "keys = [\"firstName\", \"lastSurname\"]\n\ndef split_names(item, names):\n  for letter in names:\n    if letter.isupper() and (names).index(letter) > 0:\n      inner_upper_case_index = (names).index(letter)\n      item.json.firstName = (names)[0:inner_upper_case_index]\n      item.json.lastSurname = (names)[inner_upper_case_index:]\n\nfor item in _input.all():  \n  inner_aupper_case_index = 0\n  first = False\n  for key in keys:\n    temp = _jmespath(item.json, key)\n    if temp is None:\n      if key == \"firstName\":\n        first = True  \n    if first:\n      split_names(item, item.json.lastSurname)\n    else:\n      split_names(item, item.json.firstName)\nreturn _input.all()"
+      },
+      "id": "470be289-0651-4e0d-9a37-296b2731b562",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://localhost:443/api/data/v3/ed-fi/students",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "offset",
+              "value": "0"
+            },
+            {
+              "name": "limit",
+              "value": "25"
+            },
+            {
+              "name": "totalCount",
+              "value": "false"
+            },
+            {
+              "name": "lastSurname",
+              "value": "={{ $json.lastSurname }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "9aeee5c4-58cc-4ee3-92ab-223ddc8c2245",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        680,
+        500
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "zONsXfQZ9bnF15jU",
+          "name": "local ods api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.firstName }}",
+              "value2": "={{ undefined }}"
+            }
+          ]
+        }
+      },
+      "id": "ac12fca3-d333-42d5-9b50-d1da8da52578",
+      "name": "IF",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        360,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.lastSurname }}",
+              "value2": "={{ undefined }}"
+            }
+          ]
+        }
+      },
+      "id": "a82acfa4-a796-47ca-8a0b-01a05fe36395",
+      "name": "IF1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        520,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://localhost:443/api/data/v3/ed-fi/students",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "offset",
+              "value": "0"
+            },
+            {
+              "name": "limit",
+              "value": "25"
+            },
+            {
+              "name": "totalCount",
+              "value": "false"
+            },
+            {
+              "name": "firstName",
+              "value": "={{ $json.firstName }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "c0685bb3-fb2d-4266-80b8-f2230df4f778",
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        680,
+        340
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "zONsXfQZ9bnF15jU",
+          "name": "local ods api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://localhost:443/api/data/v3/ed-fi/students",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "offset",
+              "value": "0"
+            },
+            {
+              "name": "limit",
+              "value": "25"
+            },
+            {
+              "name": "totalCount",
+              "value": "false"
+            },
+            {
+              "name": "lastSurname",
+              "value": "={{ $json.lastSurname }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "0b8e85ea-41a8-45d2-bb2c-7ca5e47ddd6f",
+      "name": "HTTP Request2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        680,
+        180
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "zONsXfQZ9bnF15jU",
+          "name": "local ods api"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "0b44d42c-4c95-4089-9136-dc6e52c6291d",
+      "name": "Merge",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        920,
+        260
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "e06bc8ef-452f-4769-8688-4144b7366138",
+      "name": "Merge1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        1100,
+        420
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \"Execute Workflow\"": {
+      "main": [
+        [
+          {
+            "node": "Read Binary Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Binary Files": {
+      "main": [
+        [
+          {
+            "node": "Spreadsheet File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spreadsheet File": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "IF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "32f81f2c-8973-444d-a481-de6188e3484a",
+  "id": "ypIMQZspzyMHTPGk",
+  "meta": {
+    "instanceId": "953946e762fb26f42b275af88becf68b0fcdf124296d8d4f20a0e4905e149439"
+  },
+  "tags": []
+}
